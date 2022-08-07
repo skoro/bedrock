@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+
+  web:
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d
+    depends_on:
+      - wp
+    networks:
+      - wp-network
+    hostname: "${WP_HOST}"
+
+  wp:
+    build: 
+      context: ./docker/php
+    depends_on:
+      - db
+    volumes:
+      - ./:/var/www
+      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    networks:
+      - wp-network
+
+  db:
+    image: mariadb:latest
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_USER: "${DB_USER}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    networks:
+      - wp-network
+
+networks:
+  wp-network:
